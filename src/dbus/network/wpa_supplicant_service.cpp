@@ -51,6 +51,17 @@ namespace {
     return sdbus::Variant{std::vector<std::uint8_t>{ssid.begin(), ssid.end()}};
   }
 
+  // Persisting the config file is best-effort: on hosts where wpa_supplicant.conf
+  // is not writable the call fails, but by then the network is already added (and
+  // selected), so a SaveConfig error must not fail the whole activation or forget.
+  void saveConfigBestEffort(sdbus::IProxy& iface) {
+    try {
+      iface.callMethod("SaveConfig").onInterface(kWpaIfaceInterface);
+    } catch (const sdbus::Error& e) {
+      kLog.debug("SaveConfig failed (non-fatal): {}", e.what());
+    }
+  }
+
   // Read all BSS properties in one GetAll round-trip.
   struct BssInfo {
     std::string ssid;
@@ -268,7 +279,11 @@ bool WpaSupplicantService::activateAccessPoint(const AccessPointInfo& ap) {
     sdbus::ObjectPath netPath;
     iface->callMethod("AddNetwork").onInterface(kWpaIfaceInterface).withArguments(args).storeResultsTo(netPath);
     iface->callMethod("SelectNetwork").onInterface(kWpaIfaceInterface).withArguments(netPath);
-    iface->callMethod("SaveConfig").onInterface(kWpaIfaceInterface);
+    saveConfigBestEffort(*iface);
+    // Track the new network right away: m_savedNetworks is only populated when an
+    // interface is first subscribed, so without this the panel never marks the
+    // network as saved and keeps re-prompting for credentials.
+    m_savedNetworks[ap.ssid] = std::string(netPath);
     return true;
   } catch (const sdbus::Error& e) {
     kLog.warn("activateAccessPoint (open) failed: {}", e.what());
@@ -288,7 +303,8 @@ bool WpaSupplicantService::activateAccessPoint(const AccessPointInfo& ap, const 
     sdbus::ObjectPath netPath;
     iface->callMethod("AddNetwork").onInterface(kWpaIfaceInterface).withArguments(args).storeResultsTo(netPath);
     iface->callMethod("SelectNetwork").onInterface(kWpaIfaceInterface).withArguments(netPath);
-    iface->callMethod("SaveConfig").onInterface(kWpaIfaceInterface);
+    saveConfigBestEffort(*iface);
+    m_savedNetworks[ap.ssid] = std::string(netPath);
     return true;
   } catch (const sdbus::Error& e) {
     kLog.warn("activateAccessPoint (psk) failed: {}", e.what());
@@ -374,7 +390,7 @@ void WpaSupplicantService::forgetSsid(const std::string& ssid) {
     return;
   try {
     iface->callMethod("RemoveNetwork").onInterface(kWpaIfaceInterface).withArguments(sdbus::ObjectPath{it->second});
-    iface->callMethod("SaveConfig").onInterface(kWpaIfaceInterface);
+    saveConfigBestEffort(*iface);
     m_savedNetworks.erase(it);
   } catch (const sdbus::Error& e) {
     kLog.warn("forgetSsid failed: {}", e.what());
