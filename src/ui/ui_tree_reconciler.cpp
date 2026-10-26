@@ -511,8 +511,9 @@ namespace ui {
       static const std::unordered_set<std::string> kSeparator = {"width",   "height",  "flexGrow",
                                                                  "opacity", "visible", "thickness",
                                                                  "color",   "spacing", "orientation"};
-      static const std::unordered_set<std::string> kProgress = {"width",    "height", "flexGrow", "opacity", "visible",
-                                                                "progress", "fill",   "track",    "radius"};
+      static const std::unordered_set<std::string> kProgress = {"width",   "height",   "flexGrow",   "opacity",
+                                                                "visible", "progress", "fill",       "track",
+                                                                "radius",  "marker",   "markerColor"};
       static const std::unordered_set<std::string> kButton = {"width",       "height",  "flexGrow",     "opacity",
                                                               "visible",     "text",    "glyph",        "fontSize",
                                                               "glyphSize",   "variant", "contentAlign", "enabled",
@@ -1768,6 +1769,20 @@ namespace ui {
       }
       if (const double* radius = numProp(desired, "radius")) {
         progress->setRadius(scaled(*radius));
+      }
+      // Optional reference marker. A negative position or an absent prop
+      // clears it, so consumers can drop the reference line without
+      // restructuring the tree. The default thickness follows the other
+      // geometry props through scaled().
+      const double* marker = numProp(desired, "marker");
+      if (marker != nullptr && *marker >= 0.0) {
+        progress->setMarker(static_cast<float>(*marker));
+        progress->setMarkerWidth(scaled(2.0));
+      } else {
+        progress->clearMarker();
+      }
+      if (auto markerColor = parseColor(desired, "markerColor")) {
+        progress->setMarkerColor(*markerColor);
       }
       progress->setSize(
           width != nullptr ? scaled(*width) : node->width(), height != nullptr ? scaled(*height) : node->height()
