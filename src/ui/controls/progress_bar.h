@@ -3,6 +3,7 @@
 #include "render/scene/node.h"
 #include "ui/palette.h"
 #include "ui/signal.h"
+#include "ui/style.h"
 
 #include <optional>
 
@@ -36,7 +37,7 @@ public:
   void clearMarker();
   void setMarkerColor(const ColorSpec& color);
   void setMarkerColor(const Color& color);
-  // Already scaled thickness, like setSize()/setRadius().
+  // Marker thickness in logical px; hosts apply their content scale, as with setSize()/setRadius().
   void setMarkerWidth(float width);
 
   void setProgress(float progress); // 0.0–1.0
@@ -56,7 +57,7 @@ private:
   ColorSpec m_fillColor = colorSpecFromRole(ColorRole::Primary);
   ColorSpec m_markerColor = colorSpecFromRole(ColorRole::OnSurfaceVariant);
   std::optional<float> m_markerPos;
-  float m_markerWidth = 2.0F;
+  float m_markerWidth = Style::progressMarkerWidth;
   float m_progress = 1.0F;
   ProgressBarOrientation m_orientation = ProgressBarOrientation::Horizontal;
   Signal<>::ScopedConnection m_paletteConn;

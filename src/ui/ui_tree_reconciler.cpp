@@ -1772,7 +1772,7 @@ namespace ui {
       }
       // An absent marker clears the line, so a tree can drop it without restructuring.
       if (const double* marker = numProp(desired, "marker")) {
-        progress->setMarkerWidth(scaled(2.0));
+        progress->setMarkerWidth(Style::progressMarkerWidth * m_scale);
         progress->setMarker(static_cast<float>(*marker));
       } else {
         progress->clearMarker();
