@@ -30,19 +30,13 @@ public:
   void setSoftness(float softness);
   void setOrientation(ProgressBarOrientation orientation);
 
-  // Optional reference marker drawn on top of the track and fill (e.g. an
-  // expected progress position or a threshold). `marker` is a 0.0-1.0 position
-  // along the track axis - 0.0 at the track start (left edge for the horizontal
-  // orientations, bottom for vertical), 1.0 at the far end - independent of how
-  // the fill grows, so it stays well-defined for HorizontalCentered where the
-  // fill expands from the center. A negative (or NaN) value or clearMarker()
-  // hides it.
+  // Reference line drawn above the fill at a 0-1 position along the track axis (0 = left, or bottom when vertical),
+  // independent of how the fill grows. Negative or NaN hides it.
   void setMarker(float marker);
   void clearMarker();
   void setMarkerColor(const ColorSpec& color);
   void setMarkerColor(const Color& color);
-  // Thickness of the marker bar, in logical px. Hosts pass an already scaled
-  // value, mirroring setSize()/setRadius().
+  // Already scaled thickness, like setSize()/setRadius().
   void setMarkerWidth(float width);
 
   void setProgress(float progress); // 0.0–1.0
@@ -61,8 +55,8 @@ private:
   ColorSpec m_trackColor = colorSpecFromRole(ColorRole::SurfaceContainer);
   ColorSpec m_fillColor = colorSpecFromRole(ColorRole::Primary);
   ColorSpec m_markerColor = colorSpecFromRole(ColorRole::OnSurfaceVariant);
-  std::optional<float> m_markerPos; // 0.0-1.0 along the track axis; nullopt = hidden
-  float m_markerWidth = 2.0F;       // logical px thickness
+  std::optional<float> m_markerPos;
+  float m_markerWidth = 2.0F;
   float m_progress = 1.0F;
   ProgressBarOrientation m_orientation = ProgressBarOrientation::Horizontal;
   Signal<>::ScopedConnection m_paletteConn;

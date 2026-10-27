@@ -22,8 +22,7 @@ ProgressBar::ProgressBar() {
   auto fill = std::make_unique<RectNode>();
   m_fill = static_cast<RectNode*>(m_fillClip->addChild(std::move(fill)));
 
-  // The optional marker is added last so it renders on top of the track and
-  // fill without any explicit z handling. Hidden until setMarker() is called.
+  // Added last so it draws above the track and fill.
   auto marker = std::make_unique<RectNode>();
   marker->setVisible(false);
   m_marker = static_cast<RectNode*>(addChild(std::move(marker)));
@@ -134,12 +133,7 @@ void ProgressBar::updateGeometry() {
   const float h = height();
   m_track->setFrameSize(w, h);
 
-  // The marker is a thin bar across the track, overhanging both ends slightly
-  // (by ~3/4 of its thickness) so it reads as a tick riding on the rounded
-  // track. It is positioned along the track axis - 0.0 at the start edge (left
-  // for the horizontal orientations including HorizontalCentered, bottom for
-  // vertical), 1.0 at the far end - rather than relative to the fill, so the
-  // centered fill keeps an unambiguous mapping.
+  // The marker crosses the track with a 3/4-thickness overhang on each side; 0 is the left (or bottom) edge.
   if (m_markerPos.has_value()) {
     const float overscan = m_markerWidth * 0.75F;
     if (m_orientation == ProgressBarOrientation::Vertical) {
